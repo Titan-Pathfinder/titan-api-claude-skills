@@ -1,0 +1,29 @@
+{
+  "name": "titan-api-examples",
+  "version": "1.0.0",
+  "description": "Example code for Titan Swap API integration",
+  "type": "module",
+  "scripts": {
+    "stream-sdk": "npx tsx stream-quotes-sdk.ts",
+    "stream-raw": "npx tsx stream-quotes-raw-ws.ts",
+    "proxy": "npx tsx backend-proxy.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^3.0.0",
+    "@solana/web3.js": "^1.95.0",
+    "@titanexchange/sdk-ts": "^0.1.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18.19.0"
+  }
+}
