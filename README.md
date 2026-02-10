@@ -1,74 +1,94 @@
-# Titan API Claude Skills
+# Titan Swap API - Claude Skill
 
-A Claude skill repository for integrating with the Titan Swap API - a WebSocket-based DEX aggregator for Solana.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill for integrating with the Titan Swap API - a WebSocket-based DEX aggregator for Solana.
 
-## What's Included
+## Installation
 
-### Claude Skill (`SKILL.md`)
+Add this skill to Claude Code:
 
-Knowledge base that helps developers integrate Titan API. Covers:
+```bash
+claude mcp add-skill https://github.com/anthropics/titan-api-claude-skills
+```
 
-- **Streaming quotes** - Real-time swap quote streaming
-- **SDK integration** - Using `@titanexchange/sdk-ts`
-- **Raw WebSocket** - Direct integration without SDK
-- **Swap execution** - Full transaction flow
-- **Browser security** - Backend proxy pattern
-- **Error handling** - Connection management and retries
+Or manually copy `SKILL.md` to your project.
 
-### Examples (`/examples`)
+## What This Skill Provides
 
-Runnable TypeScript examples demonstrating each integration pattern.
+When you have this skill installed, Claude Code can help you:
 
-| Example | Description |
-|---------|-------------|
-| `stream-quotes-sdk.ts` | Stream swap quotes using the Titan SDK |
-| `stream-quotes-raw-ws.ts` | Stream quotes using raw WebSocket (no SDK) |
-| `backend-proxy.ts` | Secure WebSocket proxy for browser clients |
+- Stream real-time swap quotes from Titan API
+- Integrate using the SDK (`@titanexchange/sdk-ts`) or raw WebSocket
+- Handle MessagePack protocol encoding
+- Build secure browser integrations with backend proxies
+- Understand token amounts, BigInt requirements, and parameter structure
 
-## Quick Start
+## Quick Example
 
-### 1. Setup Examples
+Ask Claude Code:
+
+> "Help me stream USDC to SOL quotes using Titan API"
+
+Claude will guide you through:
+```typescript
+import { V1Client } from "@titanexchange/sdk-ts";
+import bs58 from "bs58";
+
+const client = await V1Client.connect(`${WS_URL}?auth=${AUTH_TOKEN}`);
+
+const { stream } = await client.newSwapQuoteStream({
+  swap: {
+    inputMint: bs58.decode("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    outputMint: bs58.decode("So11111111111111111111111111111111111111112"),
+    amount: BigInt(100_000_000), // 100 USDC - must be BigInt!
+  },
+  transaction: {
+    userPublicKey: bs58.decode(USER_PUBLIC_KEY),
+  },
+});
+
+for await (const quotes of stream) {
+  console.log(quotes);
+}
+```
+
+## Runnable Examples
+
+The `/examples` directory contains working TypeScript examples:
 
 ```bash
 cd examples
 npm install
 cp .env.example .env
 # Edit .env with your credentials
+
+npm run stream-sdk   # SDK streaming
+npm run stream-raw   # Raw WebSocket
+npm run proxy        # Backend proxy
 ```
 
-### 2. Run Examples
+## Key Things to Know
 
-```bash
-# Stream quotes (SDK)
-npm run stream-sdk
-
-# Stream quotes (raw WebSocket)
-npm run stream-raw
-
-# Start proxy server
-npm run proxy
-```
+| Topic | Details |
+|-------|---------|
+| Protocol | WebSocket + MessagePack (not JSON) |
+| Amount | Must be `BigInt`, not `number` |
+| Token mints | Must be `Uint8Array` via `bs58.decode()` |
+| Parameters | `slippageBps` in `swap`, `intervalMs` in `update` |
 
 ## Required Credentials
 
 | Variable | Description |
 |----------|-------------|
 | `WS_URL` | Titan WebSocket endpoint |
-| `AUTH_TOKEN` | Your API authentication token |
-| `USER_PUBLIC_KEY` | Your Solana wallet address |
-
-## Using the Claude Skill
-
-The `SKILL.md` file can be used as a Claude skill to help developers understand and implement Titan API integrations.
-
-To use as a skill:
-1. Package `SKILL.md` into a `.skill` file
-2. Register with Claude Code or your Claude integration
+| `AUTH_TOKEN` | API authentication token |
+| `USER_PUBLIC_KEY` | Solana wallet address (base58) |
 
 ## Resources
 
+- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
 - [Titan TypeScript SDK](https://github.com/Titan-Pathfinder/titan-sdk-ts)
-- [Titan Rust SDK](https://github.com/Titan-Pathfinder/titan-sdk-rs)
-- [API Documentation](https://titan-exchange.gitbook.io/titan/titan-developer-docs)
+- [Titan API Documentation](https://titan-exchange.gitbook.io/titan/titan-developer-docs)
 
+## License
 
+MIT

@@ -127,7 +127,7 @@ async function streamQuotesRaw(): Promise<void> {
     const outputMint = bs58.decode(TOKENS.SOL);
     const userPublicKey = bs58.decode(USER_PUBLIC_KEY!);
 
-    const amount = BigInt(10_000_000); // 10 USDC - MUST be BigInt
+    const amount = 10_000_000; // 10 USDC
 
     console.log(`\nStarting quote stream: ${amount / 1e6} USDC -> SOL`);
     console.log("Press Ctrl+C to stop\n");

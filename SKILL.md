@@ -1,6 +1,6 @@
 ---
 name: titan-swap-api
-description: Knowledge base for Titan Swap API - a WebSocket-based Solana DEX aggregator. Use when developers ask about implementing Titan swaps, integrating DEX aggregation, streaming quotes, or executing swaps on Solana. Provides API mechanics, parameter explanations, and common patterns without prescribing specific implementations.
+description: Titan Swap API integration guide. Use when developers ask about streaming swap quotes, integrating with Titan DEX aggregator, or building Solana swap functionality.
 ---
 
 # Titan Swap API Knowledge Base
@@ -23,6 +23,23 @@ Titan is a WebSocket-based DEX aggregator for Solana that streams live swap quot
 - 1 BONK = `BigInt(100_000)` (5 decimals)
 
 **CRITICAL:** Amount must be passed as `BigInt`, not `number`.
+
+**Tip:** Consider validating amounts before encoding. Token amounts are unsigned 64-bit integers, so a simple helper can catch fractional values, negative numbers, or out-of-range inputs early with clear error messages instead of letting MessagePack encoding fail:
+
+```typescript
+const UINT64_MAX = BigInt("18446744073709551615"); // 2^64 - 1
+
+function validateAmount(input: number | bigint): bigint {
+  if (typeof input === "number" && !Number.isInteger(input)) {
+    throw new Error(`Amount must be a whole number (got ${input}). Token amounts are in raw atoms.`);
+  }
+  const amount = BigInt(input);
+  if (amount < 0n || amount > UINT64_MAX) {
+    throw new Error(`Amount out of uint64 range [0, ${UINT64_MAX}] (got ${amount}).`);
+  }
+  return amount;
+}
+```
 
 ## Common Token Mints
 
@@ -116,14 +133,14 @@ const { stream, streamId, response } = await client.newSwapQuoteStream({
   swap: {
     inputMint,
     outputMint,
-    amount: BigInt(10_000_000),  // 10 USDC - MUST be BigInt!
+    amount: BigInt(10_000_000), 
     slippageBps: 50,             // 0.5% slippage - MUST be inside swap object
   },
   transaction: {
     userPublicKey,
   },
   update: {
-    intervalMs: 1000,    // Update every 1 second - MUST be inside update object
+    intervalMs: 1000,    
     num_quotes: 3,       // Number of quotes per update
   },
 });
@@ -132,7 +149,6 @@ console.log(`Stream started, interval: ${response.intervalMs}ms`);
 
 // Process incoming quotes
 for await (const quotes of stream) {
-  // IMPORTANT: Always check if quotes exist
   if (Object.keys(quotes.quotes).length === 0) {
     console.log("No routes available");
     continue;
@@ -172,13 +188,13 @@ await client.newSwapQuoteStream({
     inputMint,
     outputMint,
     amount,
-    slippageBps: 50,      // CORRECT - inside swap
+    slippageBps: 50,      // CORRECT 
   },
   transaction: {
     userPublicKey,
   },
   update: {
-    intervalMs: 1000,     // CORRECT - inside update
+    intervalMs: 1000,     // CORRECT 
     num_quotes: 3,
   },
 });
@@ -540,8 +556,6 @@ ws.send(encode(request));
 ```
 
 ---
-
-# Server Info & Limits
 
 Query server settings before streaming:
 
