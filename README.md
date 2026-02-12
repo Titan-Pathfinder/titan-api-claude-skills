@@ -5,18 +5,24 @@
 
 Add the skill to Claude Code:
 
-    claude mcp add titan-api-claude-skills -- npx github:Titan-Pathfinder/titan-api-claude-skills
+```bash
+claude mcp add titan-api-claude-skills -- npx github:Titan-Pathfinder/titan-api-claude-skills
+```
 
-Alternatively, manually copy `SKILL.md` into your project.
+Or install directly from the `.skill` file URL:
+
+```bash
+claude mcp add-skill https://github.com/Titan-Pathfinder/titan-api-claude-skills/blob/main/titan-swap-api.skill
+```
+
+You can also manually copy `SKILL.md` into your project directory.
+
 ## What This Skill Provides
 
-When you have this skill installed, Claude Code can help you:
-
-- Stream real-time swap quotes from Titan API
-- Integrate using the SDK (`@titanexchange/sdk-ts`) or raw WebSocket
-- Handle MessagePack protocol encoding
-- Build secure browser integrations with backend proxies
-- Understand token amounts, BigInt requirements, and parameter structure
+- **Protocol-aware code generation** — Generates TypeScript with correct MessagePack encoding, BigInt amounts, and bs58-decoded token mints matching the Titan WebSocket API spec.
+- **SDK and raw WebSocket support** — Covers both SDK-based and direct WebSocket integration depending on developer needs.
+- **Parameter structure enforcement** — Places fields like `slippageBps`, `intervalMs`, and `num_quotes` in their correct nested objects matching the expected request schema.
+- **Runnable examples included** — Ships with working TypeScript examples that can be executed directly after setting up environment config.
 
 ## Quick Example
 
