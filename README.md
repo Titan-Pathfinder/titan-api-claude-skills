@@ -12,6 +12,7 @@ claude mcp add titan-api-claude-skills -- npx github:Titan-Pathfinder/titan-api-
 Or install directly from the `.skill` file URL:
 
 ```bash
+
 claude mcp add-skill https://github.com/Titan-Pathfinder/titan-api-claude-skills/blob/main/titan-swap-api.skill
 ```
 

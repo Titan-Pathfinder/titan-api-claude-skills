@@ -1,0 +1,12 @@
+{
+  "name": "titan-api-claude-skills",
+  "version": "1.0.0",
+  "description": "Titan Swap API - Claude Code Skill",
+  "type": "module",
+  "bin": {
+    "titan-api-claude-skills": "./server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  }
+}
