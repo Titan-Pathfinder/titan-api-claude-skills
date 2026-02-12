@@ -3,20 +3,20 @@
 
 ## Installation
 
-Add the skill to Claude Code:
+Copy `SKILL.md` into your project root:
 
 ```bash
-claude mcp add titan-api-claude-skills -- npx github:Titan-Pathfinder/titan-api-claude-skills
+curl -o SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
 ```
 
-Or install directly from the `.skill` file URL:
+Or clone the repo and copy it manually:
 
 ```bash
-
-claude mcp add-skill https://github.com/Titan-Pathfinder/titan-api-claude-skills/blob/main/titan-swap-api.skill
+git clone https://github.com/Titan-Pathfinder/titan-api-claude-skills.git
+cp titan-api-claude-skills/SKILL.md /path/to/your/project/
 ```
 
-You can also manually copy `SKILL.md` into your project directory.
+Claude Code will automatically pick up `SKILL.md` when it's in your project directory.
 
 ## What This Skill Provides
 
