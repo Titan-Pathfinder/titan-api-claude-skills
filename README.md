@@ -3,20 +3,34 @@
 
 ## Installation
 
-Copy `SKILL.md` into your project root:
+### As a slash command (`/titan-swap-api`)
+
+Install as a slash command so you can invoke it with `/titan-swap-api` in Claude Code.
+
+**For all projects (global):**
 
 ```bash
-curl -o SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
+mkdir -p ~/.claude/skills/titan-swap-api
+curl -o ~/.claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
 ```
 
-Or clone the repo and copy it manually:
+**For a single project:**
 
 ```bash
-git clone https://github.com/Titan-Pathfinder/titan-api-claude-skills.git
-cp titan-api-claude-skills/SKILL.md /path/to/your/project/
+mkdir -p .claude/skills/titan-swap-api
+curl -o .claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
 ```
 
-Claude Code will automatically pick up `SKILL.md` when it's in your project directory.
+Then type `/titan-swap-api` in Claude Code to use the skill.
+
+### Manual copy
+
+You can also copy `SKILL.md` into your project's `.claude/skills/` directory without the folder name (no slash command, but Claude Code will still pick it up):
+
+```bash
+mkdir -p .claude/skills
+curl -o .claude/skills/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
+```
 
 ## What This Skill Provides
 
