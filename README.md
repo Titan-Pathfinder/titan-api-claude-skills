@@ -3,10 +3,11 @@
 
 ## Installation
 
-Add this skill to Claude Code:
+Add the skill to Claude Code:
 
- manually copy `SKILL.md` to your project.
+    claude mcp add titan-api-claude-skills -- npx github:Titan-Pathfinder/titan-api-claude-skills
 
+Alternatively, manually copy `SKILL.md` into your project.
 ## What This Skill Provides
 
 When you have this skill installed, Claude Code can help you:
