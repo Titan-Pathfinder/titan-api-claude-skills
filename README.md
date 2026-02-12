@@ -1,6 +1,5 @@
 # Titan Swap API - Claude Skill
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill for integrating with the Titan Swap API - a WebSocket-based DEX aggregator for Solana.
 
 ## Installation
 
