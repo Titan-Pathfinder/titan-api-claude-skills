@@ -5,11 +5,7 @@
 
 Add this skill to Claude Code:
 
-```bash
-claude mcp add-skill https://github.com/anthropics/titan-api-claude-skills
-```
-
-Or manually copy `SKILL.md` to your project.
+ manually copy `SKILL.md` to your project.
 
 ## What This Skill Provides
 
