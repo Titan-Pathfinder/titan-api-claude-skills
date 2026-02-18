@@ -1,23 +1,65 @@
 ---
 name: titan-swap-api
 description: Titan Swap API integration guide. Use when developers ask about streaming swap quotes, integrating with Titan DEX aggregator, or building Solana swap functionality.
+version: 1.0.0
+author: Titan Exchange
+tags: [solana, dex, swap, websocket, streaming, defi]
+sdk: "@titanexchange/sdk-ts"
+protocol: WebSocket + MessagePack
+chain: Solana
 ---
 
-When this skill is invoked, respond with exactly this message first:
+## Agent Behavior
 
+When this skill is invoked, do NOT generate any code immediately. Ask the user questions first using the AskUserQuestion tool, then act based on their answers.
+
+**Step 1 — Credentials check:**
+
+Ask the user:
 > **Titan Swap API** skill loaded.
 >
-> Before we start — do you have these ready?
-> - `WS_URL` — WebSocket endpoint
-> - `AUTH_TOKEN` — API token
-> - `USER_PUBLIC_KEY` — Solana wallet (base58)
->
-> What are you building?
-> 1. SDK integration (recommended)
-> 2. Raw WebSocket
-> 3. Backend proxy
+> Do you have your Titan API credentials ready? (`WS_URL`, `AUTH_TOKEN`, `USER_PUBLIC_KEY`)
 
-Wait for the user to answer before generating any code.
+If no — tell them to get credentials from the Titan team before proceeding, then continue with the questions below so the setup is ready once they have them.
+
+**Step 2 — Ask how they want to integrate:**
+
+Use the AskUserQuestion tool with these options:
+
+Question: "How do you want to integrate Titan?"
+- **SDK (recommended)** — Uses `@titanexchange/sdk-ts`. Handles WebSocket connection, MessagePack encoding, and stream management for you. Best for TypeScript/Node.js projects.
+- **Raw WebSocket** — Direct WebSocket connection with manual MessagePack encoding. Use when you need full control or your language doesn't have an SDK.
+- **Backend proxy** — Proxy Titan's WebSocket through your own backend. Required for browser apps to keep API keys secure.
+- **Into existing project** — Replace or add Titan as a swap source in a project that already has swap/trading logic.
+
+**Step 3 — Ask what they need from the API:**
+
+Use the AskUserQuestion tool with these options:
+
+Question: "What do you need from the API?"
+- **Stream quotes only** — Just receive live swap quotes to display prices or compare routes. No transaction execution.
+- **Stream + execute swaps** — Full flow: receive quotes, pick the best, sign the transaction, send it, and confirm on-chain.
+- **Multiple pairs at once** — Monitor several token pairs simultaneously with concurrent streams.
+
+**Step 4 — If they chose "Into existing project":**
+
+Before writing any code:
+1. Ask them to point to the files where their current swap logic lives
+2. Read and understand their codebase — look for how they currently fetch quotes, build transactions, sign, and send
+3. Identify their current provider (Jupiter, Orca, Raydium, etc.)
+4. Propose a plan showing exactly which files change and how Titan fits in
+5. Wait for their approval before writing code
+
+**Step 5 — Generate code:**
+
+Only now generate code. Match the user's:
+- Project structure and file organization
+- Naming conventions (camelCase, snake_case, etc.)
+- Patterns (classes vs functions, async/await vs callbacks)
+- Existing error handling style
+- Package manager (npm, yarn, pnpm)
+
+Do NOT generate generic boilerplate. Every code block should be tailored to what the user told you in steps 1-4.
 
 ---
 
@@ -308,10 +350,289 @@ for await (const quotes of stream) {
 }
 ```
 
-The `route.transaction` field contains the serialized transaction bytes. Users are responsible for:
-1. Deserializing with `VersionedTransaction.deserialize()`
-2. Signing with their wallet
-3. Sending to the network
+The `route.transaction` field contains the serialized transaction bytes.
+
+### Full Transaction Flow: Deserialize, Sign, Send, Confirm
+
+Complete end-to-end example from quote stream to confirmed transaction:
+
+```typescript
+import "dotenv/config";
+import { V1Client } from "@titanexchange/sdk-ts";
+import {
+  Connection,
+  Keypair,
+  VersionedTransaction,
+  SendTransactionError,
+} from "@solana/web3.js";
+import bs58 from "bs58";
+
+const connection = new Connection(process.env.RPC_URL!, "confirmed");
+const wallet = Keypair.fromSecretKey(bs58.decode(process.env.PRIVATE_KEY!));
+const client = await V1Client.connect(`${process.env.WS_URL}?auth=${process.env.AUTH_TOKEN}`);
+
+const { stream, streamId } = await client.newSwapQuoteStream({
+  swap: {
+    inputMint: bs58.decode("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    outputMint: bs58.decode("So11111111111111111111111111111111111111112"),
+    amount: BigInt(10_000_000),
+    slippageBps: 50,
+  },
+  transaction: {
+    userPublicKey: wallet.publicKey.toBytes(),
+  },
+  update: { intervalMs: 1000, num_quotes: 3 },
+});
+
+for await (const quotes of stream) {
+  const routes = Object.values(quotes.quotes);
+  if (routes.length === 0) continue;
+
+  // Pick best route by highest output amount
+  const bestRoute = routes.reduce((best, r) =>
+    r.outAmount > best.outAmount ? r : best
+  );
+
+  // Skip expired quotes
+  if (bestRoute.expiresAtMs && Date.now() > bestRoute.expiresAtMs) continue;
+  if (!bestRoute.transaction) continue;
+
+  // 1. Deserialize
+  const tx = VersionedTransaction.deserialize(bestRoute.transaction);
+
+  // 2. Simulate first
+  const simulation = await connection.simulateTransaction(tx, {
+    sigVerify: false,
+    replaceRecentBlockhash: true,
+  });
+
+  if (simulation.value.err) {
+    console.error("Simulation failed:", simulation.value.err);
+    console.error("Logs:", simulation.value.logs);
+    continue; // Wait for next quote
+  }
+
+  // 3. Sign
+  tx.sign([wallet]);
+
+  // 4. Send
+  try {
+    const signature = await connection.sendRawTransaction(tx.serialize(), {
+      skipPreflight: true, // Already simulated
+      maxRetries: 3,
+    });
+    console.log(`Sent: ${signature}`);
+
+    // 5. Confirm
+    const confirmation = await connection.confirmTransaction(
+      { signature, ...(await connection.getLatestBlockhash()) },
+      "confirmed"
+    );
+
+    if (confirmation.value.err) {
+      console.error("Transaction failed on-chain:", confirmation.value.err);
+    } else {
+      console.log(`Confirmed: ${signature}`);
+    }
+  } catch (err) {
+    if (err instanceof SendTransactionError) {
+      console.error("Send failed:", err.message);
+      // Transaction may have landed anyway — check signature status
+    }
+    throw err;
+  }
+
+  await client.stopStream(streamId);
+  break;
+}
+
+await client.close();
+```
+
+**Key points for transaction execution:**
+- Always simulate before sending to catch errors early
+- Use `skipPreflight: true` after successful simulation to avoid double-checking
+- Quotes expire — check `expiresAtMs` and execute within seconds
+- Use `computeUnitsSafe` from the route if you need to set compute budget manually
+- The transaction already includes the correct recent blockhash from Titan
+
+---
+
+# Multi-Stream Management
+
+For partners running multiple token pairs simultaneously (e.g., monitoring SOL/USDC, SOL/USDT, BONK/SOL at once):
+
+### Concurrent Streams with SDK
+
+```typescript
+import "dotenv/config";
+import { V1Client } from "@titanexchange/sdk-ts";
+import bs58 from "bs58";
+
+const client = await V1Client.connect(`${process.env.WS_URL}?auth=${process.env.AUTH_TOKEN}`);
+const userPublicKey = bs58.decode(process.env.USER_PUBLIC_KEY!);
+
+// Check server limits first
+const info = await client.getInfo();
+const maxStreams = info.settings.connection.concurrentStreams;
+console.log(`Max concurrent streams: ${maxStreams}`);
+
+// Define pairs to monitor
+const pairs = [
+  {
+    name: "USDC->SOL",
+    inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    outputMint: "So11111111111111111111111111111111111111112",
+    amount: BigInt(10_000_000),
+  },
+  {
+    name: "USDT->SOL",
+    inputMint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    outputMint: "So11111111111111111111111111111111111111112",
+    amount: BigInt(10_000_000),
+  },
+  {
+    name: "SOL->USDC",
+    inputMint: "So11111111111111111111111111111111111111112",
+    outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    amount: BigInt(1_000_000_000),
+  },
+];
+
+if (pairs.length > maxStreams) {
+  console.error(`Too many pairs (${pairs.length}), server allows ${maxStreams}`);
+  process.exit(1);
+}
+
+// Track active streams for cleanup
+const activeStreams: Map<number, string> = new Map();
+
+// Start all streams concurrently
+const streamPromises = pairs.map(async (pair) => {
+  const { stream, streamId } = await client.newSwapQuoteStream({
+    swap: {
+      inputMint: bs58.decode(pair.inputMint),
+      outputMint: bs58.decode(pair.outputMint),
+      amount: pair.amount,
+      slippageBps: 50,
+    },
+    transaction: { userPublicKey },
+    update: { intervalMs: 2000, num_quotes: 3 },
+  });
+
+  activeStreams.set(streamId, pair.name);
+  console.log(`Stream ${streamId} started for ${pair.name}`);
+
+  for await (const quotes of stream) {
+    const routes = Object.values(quotes.quotes);
+    if (routes.length === 0) continue;
+
+    const best = routes.reduce((a, b) => (a.outAmount > b.outAmount ? a : b));
+    console.log(`[${pair.name}] Best: ${best.outAmount} (${routes.length} routes)`);
+  }
+});
+
+// Handle graceful shutdown — stop all streams
+async function shutdown() {
+  console.log("Stopping all streams...");
+  for (const [streamId, name] of activeStreams) {
+    await client.stopStream(streamId);
+    console.log(`Stopped ${name} (stream ${streamId})`);
+  }
+  await client.close();
+}
+
+process.on("SIGINT", shutdown);
+
+// Wait for all streams (they run until stopped)
+await Promise.allSettled(streamPromises);
+```
+
+### Stream Lifecycle Management
+
+```typescript
+// Dynamically add/remove streams at runtime
+class StreamManager {
+  private client: V1Client;
+  private streams: Map<string, { streamId: number; stop: () => Promise<void> }> = new Map();
+
+  constructor(client: V1Client) {
+    this.client = client;
+  }
+
+  async addPair(
+    name: string,
+    inputMint: string,
+    outputMint: string,
+    amount: bigint,
+    onQuote: (name: string, routes: any[]) => void
+  ) {
+    if (this.streams.has(name)) {
+      await this.removePair(name);
+    }
+
+    const { stream, streamId } = await this.client.newSwapQuoteStream({
+      swap: {
+        inputMint: bs58.decode(inputMint),
+        outputMint: bs58.decode(outputMint),
+        amount,
+        slippageBps: 50,
+      },
+      transaction: { userPublicKey: bs58.decode(process.env.USER_PUBLIC_KEY!) },
+      update: { intervalMs: 1000, num_quotes: 3 },
+    });
+
+    // Process in background
+    const processing = (async () => {
+      for await (const quotes of stream) {
+        const routes = Object.values(quotes.quotes);
+        if (routes.length > 0) onQuote(name, routes);
+      }
+    })();
+
+    this.streams.set(name, {
+      streamId,
+      stop: async () => {
+        await this.client.stopStream(streamId);
+        await processing.catch(() => {}); // Stream ends after stop
+      },
+    });
+  }
+
+  async removePair(name: string) {
+    const entry = this.streams.get(name);
+    if (entry) {
+      await entry.stop();
+      this.streams.delete(name);
+    }
+  }
+
+  async stopAll() {
+    for (const name of this.streams.keys()) {
+      await this.removePair(name);
+    }
+  }
+
+  get activePairs(): string[] {
+    return [...this.streams.keys()];
+  }
+}
+
+// Usage:
+const manager = new StreamManager(client);
+
+await manager.addPair("USDC->SOL", "EPjF...", "So111...", BigInt(10_000_000), (name, routes) => {
+  console.log(`[${name}] ${routes.length} routes, best: ${routes[0].outAmount}`);
+});
+
+// Later: dynamically add another pair
+await manager.addPair("SOL->USDC", "So111...", "EPjF...", BigInt(1_000_000_000), (name, routes) => {
+  console.log(`[${name}] ${routes.length} routes`);
+});
+
+// Remove a pair without affecting others
+await manager.removePair("USDC->SOL");
+```
 
 ---
 
