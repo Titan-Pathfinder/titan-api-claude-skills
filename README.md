@@ -1,35 +1,49 @@
 # Titan Swap API - Claude Skill
 
+[![npm](https://img.shields.io/npm/v/@titanexchange/titan-api-skill)](https://www.npmjs.com/package/@titanexchange/titan-api-skill)
 
 ## Installation
 
-### As a slash command (`/titan-swap-api`)
+### npx (recommended)
 
-Install as a slash command so you can invoke it with `/titan-swap-api` in Claude Code.
+Install with a single command:
+
+**For current project:**
+
+```bash
+npx @titanexchange/titan-api-skill
+```
 
 **For all projects (global):**
+
+```bash
+npx @titanexchange/titan-api-skill --global
+```
+
+**Overwrite existing install:**
+
+```bash
+npx @titanexchange/titan-api-skill --force
+```
+
+Then type `/titan-swap-api` in Claude Code to use the skill.
+
+### Manual install (curl)
+
+If you prefer not to use npx:
+
+**Global:**
 
 ```bash
 mkdir -p ~/.claude/skills/titan-swap-api
 curl -o ~/.claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
 ```
 
-**For a single project:**
+**Project-level:**
 
 ```bash
 mkdir -p .claude/skills/titan-swap-api
 curl -o .claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
-```
-
-Then type `/titan-swap-api` in Claude Code to use the skill.
-
-### Manual copy
-
-You can also copy `SKILL.md` into your project's `.claude/skills/` directory without the folder name (no slash command, but Claude Code will still pick it up):
-
-```bash
-mkdir -p .claude/skills
-curl -o .claude/skills/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
 ```
 
 ## What This Skill Provides
