@@ -1,6 +1,6 @@
 {
   "name": "@titanexchange/titan-api-skill",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Claude Code skill for Titan Swap API integration - streaming swap quotes, Solana DEX aggregator",
   "bin": {
     "titan-api-skill": "bin/install.js"
