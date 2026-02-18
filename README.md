@@ -112,7 +112,6 @@ npm run proxy        # Backend proxy
 |----------|-------------|
 | `WS_URL` | Titan WebSocket endpoint |
 | `AUTH_TOKEN` | API authentication token |
-| `USER_PUBLIC_KEY` | Solana wallet address (base58) |
 
 ## Resources
 
