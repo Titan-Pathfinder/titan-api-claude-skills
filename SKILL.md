@@ -18,9 +18,16 @@ When this skill is invoked, do NOT generate any code immediately. Ask the user q
 Ask the user:
 > **Titan Swap API** skill loaded.
 >
-> Do you have your Titan API credentials ready? (`WS_URL`, `AUTH_TOKEN`, `USER_PUBLIC_KEY`)
+> Do you have your Titan API credentials ready? (`WS_URL`, `AUTH_TOKEN`)
 
 If no — tell them to get credentials from the Titan team before proceeding, then continue with the questions below so the setup is ready once they have them.
+
+Note: Do NOT ask for the user's wallet public key as a credential. The wallet address is obtained at runtime from:
+- Wallet adapters (`@solana/wallet-adapter-react`, Phantom, Solflare, etc.) in frontend apps
+- Keypair files or env vars in backend services/bots
+- The user's existing wallet setup in their codebase
+
+When generating code, detect how the user's project handles wallets and use that. Ask only if you can't determine it from their codebase.
 
 **Step 2 — Ask how they want to integrate:**
 
@@ -103,12 +110,16 @@ function validateAmount(input: number | bigint): bigint {
 
 ## Required Credentials
 
-Users need:
+Users need from the Titan team:
 - `WS_URL` - WebSocket endpoint
 - `AUTH_TOKEN` - API authentication token
-- `USER_PUBLIC_KEY` - Wallet address (base58, required for transaction generation)
 
-Ask users if they have these ready before showing implementation code.
+The user's wallet public key is NOT a Titan credential — it comes from their existing wallet setup:
+- **Frontend (wallet adapter):** `wallet.publicKey` from `@solana/wallet-adapter-react` or similar
+- **Backend (keypair):** `Keypair.fromSecretKey(...)` then `.publicKey`
+- **Scripts/bots:** loaded from env var or keyfile
+
+When generating code, use whichever wallet source the user's project already has. Only fall back to `process.env.USER_PUBLIC_KEY` for standalone scripts with no existing wallet setup.
 
 ---
 
