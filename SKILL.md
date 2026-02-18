@@ -3,6 +3,24 @@ name: titan-swap-api
 description: Titan Swap API integration guide. Use when developers ask about streaming swap quotes, integrating with Titan DEX aggregator, or building Solana swap functionality.
 ---
 
+When this skill is invoked, respond with exactly this message first:
+
+> **Titan Swap API** skill loaded.
+>
+> Before we start — do you have these ready?
+> - `WS_URL` — WebSocket endpoint
+> - `AUTH_TOKEN` — API token
+> - `USER_PUBLIC_KEY` — Solana wallet (base58)
+>
+> What are you building?
+> 1. SDK integration (recommended)
+> 2. Raw WebSocket
+> 3. Backend proxy
+
+Wait for the user to answer before generating any code.
+
+---
+
 # Titan Swap API Knowledge Base
 
 Titan is a WebSocket-based DEX aggregator for Solana that streams live swap quotes from multiple liquidity providers.
@@ -39,17 +57,6 @@ function validateAmount(input: number | bigint): bigint {
   }
   return amount;
 }
-```
-
-## Common Token Mints
-
-```typescript
-const TOKENS = {
-  USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  SOL:  "So11111111111111111111111111111111111111112",
-  USDT: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-  BONK: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-};
 ```
 
 ## Required Credentials

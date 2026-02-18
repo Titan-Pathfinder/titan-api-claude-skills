@@ -1,0 +1,31 @@
+{
+  "name": "@titanexchange/titan-api-skill",
+  "version": "1.0.0",
+  "description": "Claude Code skill for Titan Swap API integration - streaming swap quotes, Solana DEX aggregator",
+  "bin": {
+    "titan-api-skill": "bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "SKILL.md"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skill",
+    "titan",
+    "swap",
+    "solana",
+    "dex",
+    "websocket",
+    "anthropic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Titan-Pathfinder/titan-api-claude-skills.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=14"
+  }
+}
