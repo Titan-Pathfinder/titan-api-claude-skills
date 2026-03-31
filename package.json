@@ -1,7 +1,7 @@
 {
   "name": "@titanexchange/titan-api-skill",
-  "version": "1.0.2",
-  "description": "Claude Code skill for Titan Swap API integration - streaming swap quotes, Solana DEX aggregator",
+  "version": "1.0.3",
+  "description": "Claude Code skill for Titan Swap API — Titan Direct (WebSocket streaming) and Titan Gateway (REST) for Solana DEX aggregation",
   "bin": {
     "titan-api-skill": "bin/install.js"
   },
@@ -17,6 +17,9 @@
     "swap",
     "solana",
     "dex",
+    "rest",
+    "gateway",
+    "direct",
     "websocket",
     "anthropic"
   ],

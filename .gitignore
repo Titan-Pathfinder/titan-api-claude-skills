@@ -3,8 +3,17 @@ node_modules/
 
 # Environment files (contain secrets)
 .env
+.env.*
 .env.local
 .env.*.local
+
+# Secrets / keys
+*.pem
+*.key
+*.p12
+*.keystore
+credentials.json
+secrets.json
 
 # Build output
 dist/
