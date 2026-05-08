@@ -1,13 +1,14 @@
 {
   "name": "@titanexchange/titan-api-skill",
-  "version": "1.0.3",
-  "description": "Claude Code skill for Titan Swap API — Titan Direct (WebSocket streaming) and Titan Gateway (REST) for Solana DEX aggregation",
+  "version": "1.1.0",
+  "description": "Claude Code skill for Titan Swap API — Titan Direct (WebSocket), Titan Gateway (REST), and DART public API for Solana DEX aggregation. Covers Swap V3 (payer, positiveSlippageFeeReceiver) and metadata.ExpectedWinner route selection.",
   "bin": {
     "titan-api-skill": "bin/install.js"
   },
   "files": [
     "bin/",
-    "SKILL.md"
+    "skills/",
+    ".claude-plugin/"
   ],
   "keywords": [
     "claude",
@@ -21,6 +22,8 @@
     "gateway",
     "direct",
     "websocket",
+    "dart",
+    "argos",
     "anthropic"
   ],
   "repository": {

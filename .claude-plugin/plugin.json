@@ -1,0 +1,23 @@
+{
+  "name": "titan-swap-api",
+  "version": "1.1.0",
+  "description": "Titan Swap API and Solana DEX-aggregation integration guide for Claude Code. Use whenever the user mentions Titan, Argos, or DART, or asks about streaming swap quotes, REST swap quotes, MessagePack-encoded Solana swap APIs, route selection (`metadata.ExpectedWinner`), Swap V3 (`payer`, `positiveSlippageFeeReceiver`), or building Solana swap/aggregator functionality — even if they don't explicitly say Titan.",
+  "author": {
+    "name": "Titan Exchange",
+    "url": "https://titan.exchange"
+  },
+  "homepage": "https://github.com/Titan-Pathfinder/titan-api-claude-skills",
+  "repository": "https://github.com/Titan-Pathfinder/titan-api-claude-skills",
+  "license": "MIT",
+  "keywords": [
+    "solana",
+    "dex",
+    "swap",
+    "titan",
+    "websocket",
+    "rest",
+    "dart",
+    "argos",
+    "defi"
+  ]
+}

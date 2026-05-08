@@ -4,9 +4,20 @@
 
 ## Installation
 
-### npx (recommended)
+### Claude Code plugin (recommended)
 
-Install with a single command:
+This repo is a Claude Code plugin marketplace. Install directly from inside Claude Code — no Node, no npm:
+
+```
+/plugin marketplace add Titan-Pathfinder/titan-api-claude-skills
+/plugin install titan-swap-api@titan-exchange
+```
+
+Updates and uninstalls are managed natively via `/plugin`. Then type `/titan-swap-api` in Claude Code to invoke the skill.
+
+### npx (alternative)
+
+If you'd rather install via npm:
 
 **For current project:**
 
@@ -26,24 +37,24 @@ npx @titanexchange/titan-api-skill --global
 npx @titanexchange/titan-api-skill --force
 ```
 
-Then type `/titan-swap-api` in Claude Code to use the skill.
-
 ### Manual install (curl)
 
-If you prefer not to use npx:
+If you prefer not to use npx or the plugin system:
 
 **Global:**
 
 ```bash
 mkdir -p ~/.claude/skills/titan-swap-api
-curl -o ~/.claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
+curl -o ~/.claude/skills/titan-swap-api/SKILL.md \
+  https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/skills/titan-swap-api/SKILL.md
 ```
 
 **Project-level:**
 
 ```bash
 mkdir -p .claude/skills/titan-swap-api
-curl -o .claude/skills/titan-swap-api/SKILL.md https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/SKILL.md
+curl -o .claude/skills/titan-swap-api/SKILL.md \
+  https://raw.githubusercontent.com/Titan-Pathfinder/titan-api-claude-skills/main/skills/titan-swap-api/SKILL.md
 ```
 
 ## What This Skill Provides

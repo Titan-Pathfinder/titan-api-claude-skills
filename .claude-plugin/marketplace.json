@@ -1,0 +1,18 @@
+{
+  "name": "titan-exchange",
+  "owner": {
+    "name": "Titan Exchange",
+    "url": "https://titan.exchange"
+  },
+  "description": "Titan Exchange plugins for Claude Code. Solana DEX aggregation via Titan Direct (WebSocket), Titan Gateway (REST), and DART.",
+  "plugins": [
+    {
+      "name": "titan-swap-api",
+      "source": "./",
+      "description": "Titan Swap API integration guide. Stream/quote/execute swaps on Solana via Titan Direct, Gateway, or DART.",
+      "version": "1.1.0",
+      "category": "skill",
+      "tags": ["solana", "dex", "swap", "websocket", "rest", "dart"]
+    }
+  ]
+}
