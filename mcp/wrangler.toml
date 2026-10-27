@@ -1,0 +1,7 @@
+name = "titan-docs-mcp"
+# Titan company account (Info@titandex.io)
+account_id = "5e46f04f691dfcf6385f2fffa9a177df"
+main = "src/index.ts"
+workers_dev = true
+compatibility_date = "2026-10-01"
+# Route (mcp.titan.exchange) is added once the Titan Cloudflare account owner picks the hostname.

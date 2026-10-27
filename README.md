@@ -59,12 +59,36 @@ curl -o .claude/skills/titan-swap-api/SKILL.md \
 
 ## What This Skill Provides
 
+- **Developers Portal support** — Integrates against `portal.api.titan.exchange` with a self-serve `x-api-key` from [developer.titan.exchange](https://developer.titan.exchange/): JSON quotes, transaction building from instructions, plan limits, and `rate_limited` vs `allowance_exhausted` handling.
 - **Protocol-aware code generation** — Generates TypeScript with correct MessagePack encoding, BigInt amounts, and bs58-decoded token mints matching the Titan WebSocket API spec.
 - **SDK and raw WebSocket support** — Covers both SDK-based and direct WebSocket integration depending on developer needs.
 - **Parameter structure enforcement** — Places fields like `slippageBps`, `intervalMs`, and `num_quotes` in their correct nested objects matching the expected request schema.
 - **Runnable examples included** — Ships with working TypeScript examples that can be executed directly after setting up environment config.
 
-## Quick Example
+## Quick Example: Developers Portal
+
+Ask Claude Code:
+
+> "Add Titan swaps to my app using my Developers Portal key"
+
+```typescript
+const params = new URLSearchParams({
+  inputMint: "So11111111111111111111111111111111111111112",
+  outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  amount: "1000000000", // 1 SOL in lamports
+  userPublicKey: USER_PUBLIC_KEY,
+  slippageBps: "50",
+  numQuotes: "5",
+});
+
+const res = await fetch(`https://portal.api.titan.exchange/api/v1/quote/swap?${params}`, {
+  headers: { "x-api-key": process.env.TITAN_API_KEY!, Accept: "application/json" },
+});
+const { quotes, metadata } = await res.json();
+const best = quotes[metadata.ExpectedWinner];
+```
+
+## Quick Example: Titan Direct streaming
 
 Ask Claude Code:
 
@@ -121,14 +145,18 @@ npm run proxy        # Backend proxy
 
 | Variable | Description |
 |----------|-------------|
-| `WS_URL` | Titan WebSocket endpoint |
-| `AUTH_TOKEN` | API authentication token |
+| `TITAN_API_KEY` | Developers Portal key, sent as `x-api-key` to `portal.api.titan.exchange`. Create one at [developer.titan.exchange](https://developer.titan.exchange/). |
+| `WS_URL` | Titan Direct WebSocket endpoint (Enterprise / distributors) |
+| `AUTH_TOKEN` | Distributor JWT for Direct and Gateway |
+
+A Portal key and a distributor JWT are not interchangeable. Each only works against its own host.
 
 ## Resources
 
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
 - [Titan TypeScript SDK](https://github.com/Titan-Pathfinder/titan-sdk-ts)
 - [Titan API Documentation](https://titan-exchange.gitbook.io/titan/titan-developer-docs)
+- [Titan Developers Portal](https://developer.titan.exchange/)
 
 ## License
 
