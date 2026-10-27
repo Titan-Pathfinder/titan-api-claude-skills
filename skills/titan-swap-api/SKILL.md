@@ -1,7 +1,7 @@
 ---
 name: titan-swap-api
-description: Titan Swap API and Solana DEX-aggregation integration guide. Use whenever the user mentions Titan, Argos, or DART, or asks about streaming swap quotes, REST swap quotes, MessagePack-encoded Solana swap APIs, route selection (`metadata.ExpectedWinner`), Swap V3 (`payer`, `positiveSlippageFeeReceiver`), or building Solana swap/aggregator functionality — even if they don't explicitly say "Titan." Also use for DART-specific routing (1 bps fee, BBO guarantee, on-chain re-optimization at execution time).
-version: 1.1.0
+description: Titan Swap API and Solana DEX-aggregation integration guide. Use whenever the user mentions Titan, Argos, or DART, the Titan Developers Portal (`portal.api.titan.exchange`, `x-api-key`, plans/credits, `rate_limited` / `allowance_exhausted`), or asks about streaming swap quotes, REST swap quotes, MessagePack-encoded Solana swap APIs, route selection (`metadata.ExpectedWinner`), Swap V3 (`payer`, `positiveSlippageFeeReceiver`), or building Solana swap/aggregator functionality — even if they don't explicitly say "Titan." Also use for DART-specific routing (1 bps fee, BBO guarantee, on-chain re-optimization at execution time).
+version: 1.2.0
 author: Titan Exchange
 tags: [solana, dex, swap, websocket, rest, streaming, defi, dart, argos, messagepack]
 sdk: "@titanexchange/sdk-ts"
@@ -18,9 +18,14 @@ When this skill is invoked, hold off on code generation and run the short interv
 Ask the user:
 > **Titan Swap API** skill loaded.
 >
-> Do you have your Titan API credentials ready? (`TITAN_ENDPOINT`, `TITAN_API_KEY`)
+> Which credentials do you have?
+> - A **Developers Portal API key** from <https://developer.titan.exchange/> (sent as `x-api-key`)
+> - A **distributor / Enterprise endpoint + JWT** (Triton, QuickNode, or issued by the Titan team)
+> - **None yet**
 
-If no — tell them to get credentials from the Titan team before proceeding, then continue with the questions below so the setup is ready once they have them.
+If they have none, point them to the Portal: anyone can sign in at <https://developer.titan.exchange/> and create a key on the free Sandbox plan (1 req/sec) in a minute. That is the default path for new integrations. Continue with the questions below so the setup is ready once they have a key.
+
+The two credential types are **not interchangeable**: a Portal key only works against `portal.api.titan.exchange` with `x-api-key`, and a JWT only works against the distributor endpoint with `Authorization: Bearer`. Sending one to the other's host returns `401`. Match Step 2 to the credential they have.
 
 Note on wallet pubkeys — don't ask the user for theirs as if it were a credential. The wallet pubkey is a runtime value the app already has access to in three standard ways:
 - Wallet adapters (`@solana/wallet-adapter-react`, Phantom, Solflare, etc.) in frontend apps
@@ -34,11 +39,12 @@ When generating code, detect how the user's project handles wallets and use that
 Use the AskUserQuestion tool with these options:
 
 Question: "Which Titan API do you want to use?"
+- **Developers Portal (REST, self-serve key) — recommended** — `portal.api.titan.exchange` with an `x-api-key` from developer.titan.exchange. Plain JSON responses (`Accept: application/json`), plans from a free Sandbox up to 150 req/sec. Best for most new integrations: wallets, dApps, bots and backends that don't need streaming.
 - **Titan Direct (WebSocket)** — Persistent WebSocket connection with real-time streaming quotes. Best for trading bots, market makers, and latency-sensitive apps. Uses `@titanexchange/sdk-ts` or raw WebSocket with MessagePack.
 - **Titan Gateway (REST)** — Standard REST endpoints returning a single set of quotes per request. Best for wallets, dApps, backend services, and existing REST architectures. No WebSocket infrastructure needed.
 - **DART Public API (REST, no key)** — Free public JSON REST endpoint that quotes exclusively via Titan's DART on-chain routing engine. Best for low-volume integrations, testing, or DART-only flows on supported pairs. **The free public tier is rate-limited to 1 request per second per IP — sufficient for prototyping and light usage. For higher throughput on a DART-only integration, the user needs a partner DART API key from the Titan team.** No API key needed for the free tier.
 
-Explain: Direct and Gateway both route through Argos and deliver the same quote quality. DART is a separate dedicated endpoint that uses only the DART provider — pick it when you specifically want DART's on-chain BBO guarantee, or for free testing without credentials.
+Explain: the Portal, Direct and Gateway all route through Argos and deliver the same quote quality — the Portal *is* Titan Gateway behind a self-serve key. Direct (streaming) is an Enterprise feature delivered through distributors; the Portal has no WebSocket. DART is a separate dedicated endpoint that uses only the DART provider — pick it when you specifically want DART's on-chain BBO guarantee, or for free testing without credentials.
 
 **If the user picks DART**, surface this up front so they aren't surprised later:
 > The free public DART endpoint allows **1 request per second per IP**. If you need more throughput on a DART-only path, please reach out to the Titan team for a partner DART API key — apply at <https://tally.so/r/1AvYeL> or contact the team directly. (Reminder: Gateway and Direct already include DART as one of their providers, and `metadata.ExpectedWinner` will pick `Titan-DART` automatically when it's the best route — so a higher-tier general API key is often a simpler path than a DART-only key.)
@@ -51,6 +57,11 @@ If they chose **Titan Direct**:
 - **SDK (recommended)** — Uses `@titanexchange/sdk-ts`. Handles WebSocket connection, MessagePack encoding, and stream management for you. Best for TypeScript/Node.js projects.
 - **Raw WebSocket** — Direct WebSocket connection with manual MessagePack encoding. Use when you need full control or your language doesn't have an SDK.
 - **Backend proxy** — Proxy Titan's WebSocket through your own backend. Required for browser apps to keep API keys secure.
+- **Into existing project** — Replace or add Titan as a swap source in a project that already has swap/trading logic.
+
+If they chose **Developers Portal**:
+- **Quick integration** — Plain `fetch` with `x-api-key` and `Accept: application/json`. No SDK, no MessagePack.
+- **Backend proxy** — For browser or mobile apps: the key stays on your server, which forwards quote requests.
 - **Into existing project** — Replace or add Titan as a swap source in a project that already has swap/trading logic.
 
 If they chose **Titan Gateway**:
@@ -69,6 +80,11 @@ For **Titan Direct**:
 - **Stream quotes only** — Just receive live swap quotes to display prices or compare routes. No transaction execution.
 - **Stream + execute swaps** — Full flow: receive quotes, pick the best, sign the transaction, send it, and confirm on-chain.
 - **Multiple pairs at once** — Monitor several token pairs simultaneously with concurrent streams.
+
+For **Developers Portal**:
+- **Get swap quotes + execute** — `GET /api/v1/quote/swap`, pick `metadata.ExpectedWinner`, build and send the transaction.
+- **Quotes only** — Display prices and routes without executing.
+- **Handle plan limits** — Rate limiting and credit exhaustion (`rate_limited` vs `allowance_exhausted`) for a production service.
 
 For **Titan Gateway**:
 - **Get swap quotes** — Fetch executable swap quotes with transaction instructions. Full swap flow.
@@ -104,7 +120,7 @@ The goal isn't to drop in a generic example — it's to produce code that fits t
 
 # Titan Swap API Knowledge Base
 
-Titan is a meta-aggregator for Solana that collects swap quotes from multiple providers and routes through **Argos**, Titan's proprietary routing engine. It offers two APIs — **Titan Direct** (WebSocket) and **Titan Gateway** (REST) — with identical routing quality.
+Titan is a meta-aggregator for Solana that collects swap quotes from multiple providers and routes through **Argos**, Titan's proprietary routing engine. It is reachable three ways with identical routing quality: the self-serve **Developers Portal** (REST, `x-api-key`), **Titan Gateway** (REST, distributor JWT) and **Titan Direct** (WebSocket streaming, Enterprise/distributors).
 
 ## Key Concepts
 
@@ -115,13 +131,15 @@ Titan is a meta-aggregator for Solana that collects swap quotes from multiple pr
 - **DART:** Titan's on-chain routing engine that re-optimizes routes at execution time (BBO guarantee, up to 1 bps fee)
 - **Titan Direct:** WebSocket API for streaming live quotes updated continuously
 - **Titan Gateway:** REST API for single-request quotes — same Argos routing, simpler integration
+- **Developers Portal:** self-serve access to Titan Gateway at `portal.api.titan.exchange` with an `x-api-key`, JSON responses, and per-organization plans (rate limit + monthly credits)
 
 ## Reference files
 
-The bulk of this skill lives in five reference files under `references/`. SKILL.md keeps just the agent interview, cross-API concepts that apply to all three surfaces, and short pointer blocks. Load only what you need for the task at hand.
+The bulk of this skill lives in six reference files under `references/`. SKILL.md keeps just the agent interview, cross-API concepts that apply to all three surfaces, and short pointer blocks. Load only what you need for the task at hand.
 
 | If the user is working on… | Read |
 |---|---|
+| Developers Portal — `portal.api.titan.exchange`, `x-api-key`, JSON quotes, plans, credits, `429` handling | `references/portal.md` |
 | Titan Gateway (REST) — quotes, prices, discovery endpoints, Swap V3 with REST | `references/gateway.md` |
 | Titan Direct (WebSocket) — SDK, raw WebSocket, multi-stream, Swap V3 with Direct | `references/direct.md` |
 | DART Public API — free JSON endpoint, supported pairs, partner keys | `references/dart.md` |
@@ -182,7 +200,11 @@ function validateAmount(input: number | bigint): bigint {
 
 ## Required Credentials
 
-Users need from the Titan team:
+**Developers Portal (self-serve):**
+- `TITAN_API_KEY` — created at <https://developer.titan.exchange/>, sent as `x-api-key: <key>`
+- Endpoint is fixed: `https://portal.api.titan.exchange` (nearest of three regions, automatically)
+
+**Distributor / Enterprise (Gateway and Direct)** — users need from the Titan team or their distributor:
 - `TITAN_ENDPOINT` — API endpoint URL
   - For Titan Direct: `wss://...` (WebSocket)
   - For Titan Gateway: `https://...` (REST)
@@ -200,6 +222,20 @@ The user's wallet public key is NOT a Titan credential — it comes from their e
 When generating code, use whichever wallet source the user's project already has. Only fall back to `process.env.USER_PUBLIC_KEY` for standalone scripts with no existing wallet setup.
 
 ---
+
+# Titan Developers Portal — self-serve REST
+
+> **Full reference:** `references/portal.md`. Load it when the user picked the Portal in Step 2, has a key from developer.titan.exchange, or asks about `portal.api.titan.exchange`, `x-api-key`, plans, credits, or `rate_limited` / `allowance_exhausted`.
+
+Quick recap:
+
+- Base URL `https://portal.api.titan.exchange`; four `GET` endpoints: `/api/v1/quote/swap`, `/api/v1/info`, `/api/v1/venues`, `/api/v1/providers`
+- Headers on every call: `x-api-key: ${TITAN_API_KEY}` and `Accept: application/json` (default is MessagePack)
+- Flat query params, comma-separated lists; set `numQuotes=5` or you only see one provider
+- `quotes` is a map keyed by provider ID; execute `quotes[metadata.ExpectedWinner]`; instruction `d` is **base64** in JSON
+- Limits are per organization across all keys and regions; every request costs one credit, `/info` included
+- `429 rate_limited` → honor `retry-after`; `429 allowance_exhausted` → stop retrying, upgrade or wait for the period
+- `403 Missing Authentication Token` means wrong method/path (all endpoints are `GET`), not bad auth
 
 # Titan Gateway — REST API
 
@@ -270,20 +306,25 @@ Quick recap:
 | Simulation fails | Various | Check slippage, token accounts, compute units |
 | Gateway 404 | No routes | Try relaxing `dexes`, `excludeDexes`, `onlyDirectRoutes` constraints |
 | Gateway response unreadable | Decoding as JSON | Response is MessagePack — use `@msgpack/msgpack` decoder |
+| Portal response is binary | No `Accept` header | Send `Accept: application/json` |
+| Portal `401 invalid_api_key` with a valid-looking token | Distributor JWT, `Authorization` instead of `x-api-key`, or wrong host | Portal keys go in `x-api-key` to `portal.api.titan.exchange` only |
+| Portal `403 Missing Authentication Token` | `POST` or unknown path | Every Portal endpoint is `GET` |
+| Portal `429 allowance_exhausted` | Monthly credits spent | Retrying won't help — upgrade the plan or wait for the next period |
+| Portal throughput capped despite many keys | Limits are per organization | More keys don't add capacity; upgrade the plan |
 
 ---
 
 # Key Principles
 
-1. **Two APIs, same quality:** Titan Direct (WebSocket) and Titan Gateway (REST) both use Argos routing
+1. **Three ways in, same quality:** Developers Portal, Titan Gateway and Titan Direct all use Argos routing
 2. **Amount format matters:** BigInt for Direct, string for Gateway query params
 3. **Parameter placement matters:** `slippageBps` in `swap`, `intervalMs` in `update` (Direct only)
 4. **Always check for empty quotes:** `quotes.quotes` can be `{}`
-5. **MessagePack everywhere:** Both APIs use MessagePack encoding, never JSON
+5. **Encoding:** Direct and distributor Gateway use MessagePack; the Portal defaults to MessagePack but returns JSON with `Accept: application/json`; DART is JSON
 6. **Token mints:** Direct uses `Uint8Array` (bs58.decode), Gateway uses base58 strings
 7. **Simulate before sending:** Always simulate transactions first
 8. **Handle reconnection:** Direct connections will drop — implement retry logic
-9. **Secure credentials:** Never expose API tokens in frontend code
+9. **Secure credentials:** Never expose API tokens or Portal keys in frontend code — proxy through your backend
 
 ---
 
@@ -304,6 +345,8 @@ Quick recap:
 - TypeScript SDK: https://github.com/Titan-Pathfinder/titan-sdk-ts
 - Rust SDK: https://github.com/Titan-Pathfinder/titan-sdk-rs
 - API Docs: https://titan-exchange.gitbook.io/titan/titan-developer-docs
+- Developers Portal (keys, plans, billing): https://developer.titan.exchange/
+- Portal docs: https://titan-exchange.gitbook.io/titan/developer-doc/developers-portal
 
 ## Support
 

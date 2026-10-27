@@ -1,0 +1,22 @@
+{
+  "name": "titan-docs-mcp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bundle-skill": "node scripts/bundle-skill.mjs",
+    "dev": "npm run bundle-skill && wrangler dev",
+    "deploy": "npm run bundle-skill && wrangler deploy",
+    "typecheck": "npm run bundle-skill && tsc --noEmit",
+    "test": "npm run bundle-skill && vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261022.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
+  }
+}
